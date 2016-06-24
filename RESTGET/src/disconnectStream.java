@@ -40,10 +40,11 @@ public class disconnectStream {
 	static int[] timeoutWithData=new int[50];
 	static int i=0;
 	static HttpURLConnection connection;
+	static int[] nveces=new int[50];
 	
 
 	public static void main(String[] args) {
-		String uri="http://coltrack.com:8087/v2/servers/_defaultServer_/vhosts/_defaultVHost_/applications/live/instances?";
+		String uri="http://localhost:8087/v2/servers/_defaultServer_/vhosts/_defaultVHost_/applications/live/instances?";
 		
 		String Strjson=null;
 		int dos=0;
@@ -112,7 +113,7 @@ public class disconnectStream {
 							System.out.print("Stream Procesado:");
 							System.out.println(streamArrays[i]);						
 							
-							uri1="http://coltrack.com:8087/v2/servers/_defaultServer_/vhosts/_defaultVHost_/applications/live/instances/_definst_/incomingstreams/"+streamArrays[i]+"/monitoring/current";
+							uri1="http://localhost:8087/v2/servers/_defaultServer_/vhosts/_defaultVHost_/applications/live/instances/_definst_/incomingstreams/"+streamArrays[i]+"/monitoring/current";
 							url = new URL(uri1);
 							
 							connection = (HttpURLConnection) url.openConnection();
@@ -141,7 +142,7 @@ public class disconnectStream {
 							bytesIn[i]=intNumber;
 							System.out.print("bytesIn: "+bytesIn[i]+",");
 							
-							intNumber=object.getInt("bytesOut");
+							intNumber=object.getInt("bytesOutRate");
 							bytesOut[i]=intNumber;
 							System.out.print("bytesOut: "+bytesOut[i]+",");
 
@@ -149,10 +150,16 @@ public class disconnectStream {
 							totalConnections[i]=intNumber;
 							System.out.print("totalConnections: "+totalConnections[i]+",");
 							
+							if ((totalConnections[i]>0)&&(totalConnections[i]>totalConnectionsOld[i]) && bytesOut[i]==0){
+								System.out.println("");
+								System.out.println("Nuevo Usuario Detectado*************************");
+								timeoutWithData[i]=600;
+							}
+							
 							if ((totalConnections[i]>totalConnectionsOld[i]) && bytesOut[i]>0){
 								System.out.println("");
 								System.out.println("Nuevo Usuario Detectado*************************");
-								timeoutWithData[i]=timeoutWithData[i]+60;
+								timeoutWithData[i]=timeoutWithData[i]+600;
 							}
 							totalConnectionsOld[i]=totalConnections[i];
 							
@@ -162,74 +169,132 @@ public class disconnectStream {
 								int diferenciaTiempo=0;
 								//diferenciaTiempo=uptime-ti;
 								//System.out.println("Diferencia tiempo: "+diferenciaTiempo);
-								System.out.print("counterBytesOut: "+countersBytesOut[i]+",");
+								System.out.print("timeoutZeroData: "+countersBytesOut[i]+",");
 								counterBytesOut++;
 								countersBytesOut[i]++;
 								//System.out.println(counterBytesOut);
-								if (countersBytesOut[i]>30 ){
+								if (countersBytesOut[i]>60 ){
 									System.out.println("Matando stream por tiempo y por bytes 0...");
 									
-									matarStream(streamArrays[i]);
-//									String uristop="http://coltrack.com:8087/v2/servers/_defaultServer_/vhosts/_defaultVHost_/applications/live/instances/_definst_/incomingstreams/"+streamArrays[i]+"/actions/disconnectStream";
-//									
-//							
-//									
-//									System.out.println("Parando Stream"+uristop);
-//									try {
-//									    URL urla = new URL(uristop);
-//									    HttpURLConnection httpCon = (HttpURLConnection) urla.openConnection();
-//									    httpCon.setDoOutput(true);
-//									    httpCon.setRequestMethod("PUT");
-//									    OutputStreamWriter out = new OutputStreamWriter(
-//									        httpCon.getOutputStream());
-//									    out.write("Resource content");
-//									    out.close();
-//									    //httpCon.getInputStream();
-//									    InputStream inp = httpCon.getInputStream();
-//									    String encoding=httpCon.getContentEncoding();
-//									    encoding = encoding == null ? "UTF-8" : encoding;
-//									    String body = IOUtils.toString(inp,encoding);
-//									    //System.out.println("Respuesta: "+body);
-//									    //Borramos stream del array de streams:
-//									    System.out.println("Stream a borrar de la lista: "+streamArrays[i]);
-//									    String streama=streamArrays[i];
-//									    for (int k=0;k<streamArrays.length;k++){
-//									    	String streamb=streamArrays[k];
-//									    	if (streama.equals(streamb)){
-//									    		System.out.println("Borrando stream de la lista...");
-//									    		streamArrays[i]=null;
-//									    		countersBytesOut[i]=0;
-//									    	}
-//									    	
-//									    }
-//									    httpCon.disconnect();
-//									    connection.disconnect();
-//									    
-//									} catch (MalformedURLException e) {
-//									    e.printStackTrace();
-//									    System.out.println("Error: Borrando stream de la lista...");
-//							    		streamArrays[i]=null;
-//									} catch (ProtocolException e) {
-//									    e.printStackTrace();
-//									    System.out.println("Error: Borrando stream de la lista...");
-//							    		streamArrays[i]=null;
-//									} catch (IOException e) {
-//									    e.printStackTrace();
-//									    System.out.println("Error: Borrando stream de la lista...");
-//							    		streamArrays[i]=null;
-//									}
+									//matarStream(streamArrays[i]);
+									String uristop="http://localhost:8087/v2/servers/_defaultServer_/vhosts/_defaultVHost_/applications/live/instances/_definst_/incomingstreams/"+streamArrays[i]+"/actions/disconnectStream";
+									
+							
+									
+									System.out.println("Parando Stream"+uristop);
+									try {
+									    URL urla = new URL(uristop);
+									    HttpURLConnection httpCon = (HttpURLConnection) urla.openConnection();
+									    httpCon.setDoOutput(true);
+									    httpCon.setRequestMethod("PUT");
+									    OutputStreamWriter out = new OutputStreamWriter(
+									        httpCon.getOutputStream());
+									    out.write("Resource content");
+									    out.close();
+									    //httpCon.getInputStream();
+									    InputStream inp = httpCon.getInputStream();
+									    String encoding=httpCon.getContentEncoding();
+									    encoding = encoding == null ? "UTF-8" : encoding;
+									    String body = IOUtils.toString(inp,encoding);
+									    //System.out.println("Respuesta: "+body);
+									    //Borramos stream del array de streams:
+									    System.out.println("Stream a borrar de la lista: "+streamArrays[i]);
+									    String streama=streamArrays[i];
+									    for (int k=0;k<streamArrays.length;k++){
+									    	String streamb=streamArrays[k];
+									    	if (streama.equals(streamb)){
+									    		System.out.println("Borrando stream de la lista...");
+									    		streamArrays[i]=null;
+									    		countersBytesOut[i]=0;
+									    	}
+									    	
+									    }
+									    httpCon.disconnect();
+									    connection.disconnect();
+									    
+									} catch (MalformedURLException e) {
+									    e.printStackTrace();
+									    System.out.println("Error: Borrando stream de la lista...");
+							    		streamArrays[i]=null;
+									} catch (ProtocolException e) {
+									    e.printStackTrace();
+									    System.out.println("Error: Borrando stream de la lista...");
+							    		streamArrays[i]=null;
+									} catch (IOException e) {
+									    e.printStackTrace();
+									    System.out.println("Error: Borrando stream de la lista...");
+							    		streamArrays[i]=null;
+									}
 									
 								}
-								countersBytesOutData[i]=0;
+								nveces[i]++;
+								if (nveces[i]>30){
+									nveces[i]=0;
+									countersBytesOutData[i]=0;
+								}
+								countersBytesOutData[i]++;
 							}else {
 								//si bytesOut>0
+								nveces[i]=0;
+								
 								counterBytesOut=0;
 								countersBytesOut[i]=0;
 								ti=uptime;	
 								countersBytesOutData[i]++;
 								if (countersBytesOutData[i]>=timeoutWithData[i]){
 									System.out.println("Apagando stream con dataout por timeout!!!");
-									matarStream(streamArrays[i]);
+									//matarStream(streamArrays[i]);
+									System.out.println("Matando stream por tiempo y por bytes>0...");
+									
+									//matarStream(streamArrays[i]);
+									String uristop="http://localhost:8087/v2/servers/_defaultServer_/vhosts/_defaultVHost_/applications/live/instances/_definst_/incomingstreams/"+streamArrays[i]+"/actions/disconnectStream";
+									
+							
+									
+									System.out.println("Parando Stream"+uristop);
+									try {
+									    URL urla = new URL(uristop);
+									    HttpURLConnection httpCon = (HttpURLConnection) urla.openConnection();
+									    httpCon.setDoOutput(true);
+									    httpCon.setRequestMethod("PUT");
+									    OutputStreamWriter out = new OutputStreamWriter(
+									        httpCon.getOutputStream());
+									    out.write("Resource content");
+									    out.close();
+									    //httpCon.getInputStream();
+									    InputStream inp = httpCon.getInputStream();
+									    String encoding=httpCon.getContentEncoding();
+									    encoding = encoding == null ? "UTF-8" : encoding;
+									    String body = IOUtils.toString(inp,encoding);
+									    //System.out.println("Respuesta: "+body);
+									    //Borramos stream del array de streams:
+									    System.out.println("Stream a borrar de la lista: "+streamArrays[i]);
+									    String streama=streamArrays[i];
+									    for (int k=0;k<streamArrays.length;k++){
+									    	String streamb=streamArrays[k];
+									    	if (streama.equals(streamb)){
+									    		System.out.println("Borrando stream de la lista...");
+									    		streamArrays[i]=null;
+									    		countersBytesOut[i]=0;
+									    	}
+									    	
+									    }
+									    httpCon.disconnect();
+									    connection.disconnect();
+									    
+									} catch (MalformedURLException e) {
+									    e.printStackTrace();
+									    System.out.println("Error: Borrando stream de la lista...");
+							    		streamArrays[i]=null;
+									} catch (ProtocolException e) {
+									    e.printStackTrace();
+									    System.out.println("Error: Borrando stream de la lista...");
+							    		streamArrays[i]=null;
+									} catch (IOException e) {
+									    e.printStackTrace();
+									    System.out.println("Error: Borrando stream de la lista...");
+							    		streamArrays[i]=null;
+									}
 								}
 								
 								
@@ -261,7 +326,7 @@ public class disconnectStream {
 //				
 //			}
 			//System.out.println("streams killed!!!");
-			System.out.println("--------------------------------");
+			//System.out.println("--------------------------------");
 			System.out.println("");
 
 			try {
@@ -276,7 +341,7 @@ public class disconnectStream {
 
 	private static void matarStream(String string) {
 		// TODO Auto-generated method stub
-		String uristop="http://coltrack.com:8087/v2/servers/_defaultServer_/vhosts/_defaultVHost_/applications/live/instances/_definst_/incomingstreams/"+string+"/actions/disconnectStream";
+		String uristop="http://localhost:8087/v2/servers/_defaultServer_/vhosts/_defaultVHost_/applications/live/instances/_definst_/incomingstreams/"+string+"/actions/disconnectStream";
 		
 		
 		
